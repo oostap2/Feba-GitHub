@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feba - Гра</title>
+    <style>
+        canvas {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100vh;
+            margin: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+
+
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = 670;
+canvas.height = 500;
+
+const FPS = 46;
+const frameTime = 1000 / FPS;
+let lastTime = 0;
+
+canvas.addEventListener("mousemove", (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    mouse.x = x;
+    mouse.y = y;
+    // console.log(x, y);
+});
+
+//// Amongus class
+class Knopka {
+    constructor(x, y, p_x, p_y, question1 = '', p_c_1 = 0, p_c_2 = 0, p_c_3 = 0, t_c_1 = 0, t_c_2 = 0, t_c_3 = 0, r = 1, ra = 1, ran = 7) {
+        this.x = x; // X
+        this.y = y; // Y
+        this.p_x = p_x; // width
+        this.p_y = p_y; // height
+        this.question1 = question1; // text string
+        this.p_c_1 = p_c_1; // rect (RGB)
+        this.p_c_2 = p_c_2; // rect (RGB)
+        this.p_c_3 = p_c_3; // rect (RGB)
+        this.t_c_1 = t_c_1; // text (RGB)
+        this.t_c_2 = t_c_2; // text (RGB)
+        this.t_c_3 = t_c_3; // text (RGB)
+        this.speed_x = r; // speed x
+        this.speed_y = ra; // speed y
+        this.width = ran; // square size
+    }
+
+    // draw object
+    f() {
+        // draw rect
+        ctx.fillStyle = `rgb(${this.p_c_1}, ${this.p_c_2}, ${this.p_c_3})`;
+        ctx.fillRect(this.x, this.y, this.p_x, this.p_y);
+
+        // draw text
+        ctx.font = '39px Arial';
+        ctx.fillStyle = `rgb(${this.t_c_1}, ${this.t_c_2}, ${this.t_c_3})`;
+        ctx.textAlign = "left"; // Текст вирівнюється по лівому краю
+        ctx.textBaseline = "top"; // Вирівнювання тексту по верхній частині
+        ctx.fillText(this.question1, this.x, this.y + this.p_y / 2);
+    }
+}
+
+// check colision
+Knopka.prototype.g = function g(enemy) {
+    return !(
+    this.y + this.p_y <= enemy.y ||
+    this.y >= enemy.y + enemy.p_y ||
+    this.x + this.p_x <= enemy.x ||
+    this.x >= enemy.x + enemy.p_x
+    );
+}
+
+
+//// objects
+const tab = new Knopka(502,7,0,0,'0',0,0,0,255,255,255); // text how mutch cubes destroyed
+const mouse = new Knopka(4000,4000,1,1,' '); // mouse
+const d1 = new Knopka(500,0,171,501,' ',0,0,0); // big rect in right
+const lvl= new Knopka(502,47,0,0,'0',0,0,0,255,255,255); // text of level
+const d2 = new Knopka(500,100,171,400,' ',100,0,0); // another rect in right
+const d3 = new Knopka(500,500,170,500,' ',0,250,0); // expirience
+const the_end = new Knopka(200,200,0,0,' ',0,0,0,0,0,0); // text " End "
+const fon= new Knopka(0,501,500,500,' ',0,0,0); // bottom rect
+const v1 = new Knopka(10,450,0,0,'0' , 0,0,0 , 0,0,0 ); // text deaths
+const v2 = new Knopka(10,400,0,0,'0' , 0,0,0 , 0,0,0 ); // text level
+const v3 = new Knopka(10,350,0,0,'0' , 0,0,0 , 0,0,0 ); // text squares destroyed at all
+const v4 = new Knopka(10,300,0,0,'0' , 0,0,0 , 0,0,0 ); // text squares destroyed in this game
+const p1 = new Knopka(0,0,22,22,' ',0,0,0);        // 1 pause made of 4 buttons
+const p2 = new Knopka(1,1,20,20,' ',200,200,250);  // 2 pause
+const p3 = new Knopka(5.5,6,4,10,' ',100,100,250); // 3 pause
+const p4 = new Knopka(13.5,6,4,10,' ',100,100,250);// 4 pause
+const pausa = new Knopka(200,185,0,0,' Пауза',0,0,0,100,100,250); // text " pause"
+//// variables
+let x_kubas = 0; // squares destroyed at all
+let x_lose  = 0; // loses
+let q1 = 0; // varible for text 1
+let q2 = 0; // varible for text 2
+let q3 = 0; // varible for text 3
+let q4 = 0; // varible for text 4
+let m_fon = 0; // bottom rect pos
+let kubas = 0; // squares destroyed in this game
+let start_i = 100; // second iterator
+let progres1 = 5; // squares left to level up
+let progres2 = 0; // squares destroyed after level up
+let lvl1 = 1; // level
+let str1 = 6; // power
+let i = 125; // iterator
+let HP = 255; // health
+let kubs = []; // squares
+let kubes= []; // particles
+//// functions
+function randint(a, b) {
+  return Math.floor(Math.random() * (b - a + 1)) + a;
+}
+// practices maker
+function kubis(b) {
+    for (let i=0; i < 3; i++) {
+        let kube = new Knopka(
+            0, // x
+            0, // y
+            0, 0,
+            Math.round(Math.random()).toString(), // text
+            0, 0, 0,
+            0, randint(200, 255), 0, // color (green)
+            randint(-20, 20) / 10,   // speed X
+            randint(-40, -20) / 10   // speed Y
+        );
+        kube.x = b.x + 10;
+        kube.y = b.y + 10;
+        kubes.push(kube);
+    }
+}
+//// the game loop
+function gameLoop() {
+    if (mouse.g(p1) && i >= -200) paused = true;
+    else paused = false;
+    if (paused) {
+        pausa.f()
+        requestAnimationFrame(gameLoop);
+        return; // Виходимо з функції, поки гра на паузі
+    }
+    lastTime = performance.now();
+    ctx.fillStyle = `rgb(${225}, ${HP}, ${HP})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (m_fon > 0) m_fon--;
+    fon.y -= m_fon;
+    fon.f();
+    d1.f();
+    d2.f();
+    d3.y = 500 - (progres2 * (d2.p_y / progres1));
+    d3.f();
+    tab.question1 = 'куби ' + x_kubas.toString();
+    tab.f();
+    lvl.question1 = 'рівень ' + lvl1.toString();
+    lvl.f();
+    the_end.f();
+    v1.question1 = ' Програшів: ' + Math.round(q1).toString();
+    v2.question1 = ' Рівень: ' + Math.round(q2).toString();
+    v3.question1 = ' Всі куби: ' + Math.round(q3).toString();
+    v4.question1 = ' Куби за цю гру: ' + Math.round(q4).toString();
+    p = 1;
+    i--;
+    if (progres1 == progres2) {
+        progres1 += 5;
+        progres2 = 0;
+        lvl1 += 1;
+        str1 += 3;
+    }
+    if (i == -250) the_end.question1 = 'Кінець!';
+    else if (i == -300) {
+        if (x_kubas == kubas) m_fon = 19;
+        else m_fon = 22;
+    } else if (i <= -350) {
+        if (v1.t_c_1 < 255){
+            v1.t_c_1 += 5;
+            v1.t_c_2 += 5;
+            v1.t_c_3 += 5;
+
+            v2.t_c_1 += 5;
+            v2.t_c_2 += 5;
+            v2.t_c_3 += 5;
+
+            v3.t_c_1 += 5;
+            v3.t_c_2 += 5;
+            v3.t_c_3 += 5;
+
+            v4.t_c_1 += 5;
+            v4.t_c_2 += 5;
+            v4.t_c_3 += 5;
+        } else {
+            if (kubas > q4 && x_kubas != kubas) q4 += kubas / 40;
+            else if (x_kubas > q3) q3 += x_kubas / 40;
+            else if (lvl1 > q2) q2 += lvl1 / 40;
+            else if (x_lose > q1) q1 += x_lose / 40;
+        }
+        v1.f();
+        v2.f();
+        v3.f();
+        if (kubas != x_kubas)
+            v4.f();
+    }
+    if (i == 0) {
+        i = start_i;
+        start_i -= 1;
+        for (let j = 0; j < 2; j++) {
+            let kub = new Knopka(0,0, 0,0, ' ', 0,200,0, 0,0,0, randint(-2,2),randint(-31,-26)/3,randint(40,60));
+            kub.x = randint(20, 400 - kub.width);
+            kub.y = 501;
+            kub.p_x = kub.width;
+            kub.p_y = kub.width;
+            kubs.push(kub);
+        }
+    }
+    for (b of kubes) {
+        b.speed_y += 0.15;
+        b.x += b.speed_x;
+        b.y += b.speed_y;
+        if (b.x < 6 || b.x + b.width > 494) b.speed_x = -b.speed_x;
+        if (b.y > 501) kubes = kubes.filter(item => item !== b);
+        b.f();
+    }
+    for (b of kubs) {
+        b.speed_y += 0.1;
+        b.x += b.speed_x;
+        b.y += b.speed_y;
+        if (b.x < 6 || b.x + b.width > 494) b.speed_x = -b.speed_x;
+        if (b.y > 600) {
+            kubs = kubs.filter(item => item !== b);
+            HP -= 10;
+        }
+        if (b.p_c_1 > 150) {
+            kubs = kubs.filter(item => item !== b);
+            kubis(b);
+            kubas += 1;
+            progres2 += 1;
+            x_kubas += 1;
+        }
+        if (b.g(mouse)) {
+            if (b.p_c_1 + str1 > 150) {
+                kubs = kubs.filter(item => item !== b);
+                kubis(b);
+                kubas += 1;
+                progres2 += 1;
+                x_kubas += 1;
+            } else {
+                b.p_c_2 -= str1;
+                b.p_c_1 += str1;
+            }
+        }
+        b.f();
+    }
+    p1.f();
+    p2.f();
+    p3.f();
+    p4.f();
+    if (HP <= 5) {
+        HP = 225;
+        start_i = 100;
+        kubas = 0;
+        i = 45;
+        x_lose++;
+        for (b of kubs) {
+            kubs = []
+            kubis(b)
+        }
+    }
+
+    setTimeout(() => {
+        requestAnimationFrame(gameLoop);
+    }, frameTime - (lastTime - performance.now()));
+    // requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+
+
+</script>
+</body>
+</html>
