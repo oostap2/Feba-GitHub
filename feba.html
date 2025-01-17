@@ -43,6 +43,14 @@ canvas.addEventListener("mousemove", (event) => {
     // console.log(x, y);
 });
 
+canvas.addEventListener('touchmove', event => {
+    const touch = event.touches[0];
+    const rect = canvas.getBoundingClientRect();
+
+    mouse.x = touch.clientX - rect.left;
+    mouse.y = touch.clientY - rect.top;
+});
+
 //// Amongus class
 class Knopka {
     constructor(x, y, p_x, p_y, question1 = '', p_c_1 = 0, p_c_2 = 0, p_c_3 = 0, t_c_1 = 0, t_c_2 = 0, t_c_3 = 0, r = 1, ra = 1, ran = 7) {
