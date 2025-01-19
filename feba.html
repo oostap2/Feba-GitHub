@@ -223,10 +223,19 @@ function gameLoop() {
             v4.t_c_2 += 5;
             v4.t_c_3 += 5;
         } else {
-            if (kubas > q4 && x_kubas != kubas) q4 += kubas / 40;
-            else if (x_kubas > q3) q3 += x_kubas / 40;
-            else if (lvl1 > q2) q2 += lvl1 / 40;
-            else if (x_lose > q1) q1 += x_lose / 40;
+            if (kubas > q4 && x_kubas != kubas) {
+                q4 += kubas / 40;
+                
+            } else if (x_kubas > q3) {
+                q3 += x_kubas / 40;
+                q4 = kubas;
+            } else if (lvl1 > q2) {
+                q2 += lvl1 / 40;
+                q3 = x_kubas;
+            } else if (x_lose > q1) {
+                q1 += x_lose / 40;
+                q2 = lvl1;
+            } else q1 = x_lose;
         }
         v1.f();
         v2.f();
