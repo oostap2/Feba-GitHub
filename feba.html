@@ -33,23 +33,34 @@ canvas.height = 500;
 const FPS = 46;
 const frameTime = 1000 / FPS;
 let lastTime = 0;
+let phone = false;
 
 canvas.addEventListener("mousemove", (event) => {
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    mouse.x = x;
-    mouse.y = y;
-    // console.log(x, y);
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+ 
+    mouse.x = (event.clientX - rect.left) * scaleX;
+    mouse.y = (event.clientY - rect.top) * scaleY;
 });
 
-canvas.addEventListener('touchmove', event => {
-    const touch = event.touches[0];
+canvas.addEventListener("touchstart", handleTouch);
+canvas.addEventListener("touchmove", handleTouch);
+
+function handleTouch(event) {
     const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
 
-    mouse.x = touch.clientX - rect.left;
-    mouse.y = touch.clientY - rect.top;
-});
+    const touch = event.touches[0]; // first touch
+
+    mouse.x = (touch.clientX - rect.left) * scaleX;
+    mouse.y = (touch.clientY - rect.top) * scaleY;
+    phone = true; // draw mouse
+
+    event.preventDefault(); // stop scroling
+}
 
 //// Amongus class
 class Knopka {
@@ -98,7 +109,7 @@ Knopka.prototype.g = function g(enemy) {
 
 //// objects
 const tab = new Knopka(502,7,0,0,'0',0,0,0,255,255,255); // text how mutch cubes destroyed
-const mouse = new Knopka(4000,4000,1,1,' '); // mouse
+const mouse = new Knopka(4000,4000,4,4,' ',); // mouse
 const d1 = new Knopka(500,0,171,501,' ',0,0,0); // big rect in right
 const lvl= new Knopka(502,47,0,0,'0',0,0,0,255,255,255); // text of level
 const d2 = new Knopka(500,100,171,400,' ',100,0,0); // another rect in right
@@ -288,6 +299,8 @@ function gameLoop() {
             kubis(b)
         }
     }
+
+    if (phone) mouse.f();
 
     setTimeout(() => {
         requestAnimationFrame(gameLoop);
